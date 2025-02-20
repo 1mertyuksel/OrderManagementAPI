@@ -15,14 +15,12 @@ namespace OrderManagementAPI.Repository.Concrete
 
         public async Task AddAsync(OrderDetail orderDetail)
         {
-            // Yeni order detail ekle
             await _context.OrderDetails.AddAsync(orderDetail);
             await _context.SaveChangesAsync();
         }
 
         public async Task<List<OrderDetail>> GetByOrderIdAsync(int orderId)
         {
-            // OrderId'ye göre order details getir
             return await _context.OrderDetails
                                  .Where(od => od.OrderId == orderId)
                                  .ToListAsync();

@@ -22,7 +22,6 @@ public class ProductService : IProductService
 
     public async Task<List<ProductDto>> GetProductsAsync(string? category)
     {
-        // Kategoriye özel cache key oluştur
         string cacheKey = string.IsNullOrEmpty(category) ? "product_cache_all" : $"product_cache_{category}";
 
         if (_memoryCache.TryGetValue(cacheKey, out List<ProductDto>? cachedProducts) && cachedProducts != null)
@@ -30,13 +29,11 @@ public class ProductService : IProductService
             return cachedProducts;
         }
 
-        // Veritabanından çek
         var products = await _productRepository.GetByCategoryAsync(category);
 
         List<ProductDto> productsDto = products;
 
         
-        // Cache’e ekle (30 dakika boyunca saklanacak)
         var cacheEntryOptions = new MemoryCacheEntryOptions()
             .SetAbsoluteExpiration(TimeSpan.FromMinutes(30));
 

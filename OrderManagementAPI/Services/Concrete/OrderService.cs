@@ -5,10 +5,11 @@ using OrderManagementAPI.Repository;
 using OrderManagementAPI.Services.Abstract;
 using Org.BouncyCastle.Crypto;
 using AutoMapper;
+using Microsoft.EntityFrameworkCore;
+using Org.BouncyCastle.Asn1.Ocsp;
 
 namespace OrderManagementAPI.Services.Concrete
 {
-    // OrderService
     public class OrderService : IOrderService
     {
         private readonly IOrderRepository _orderRepository;
@@ -19,6 +20,7 @@ namespace OrderManagementAPI.Services.Concrete
         public OrderService(IOrderRepository orderRepository, IOrderDetailRepository orderDetailRepository,
                             IRabbitMqService rabbitMqService, IMapper mapper)
         {
+           
             _orderRepository = orderRepository;
             _orderDetailRepository = orderDetailRepository;
             _rabbitMqService = rabbitMqService;
@@ -27,7 +29,7 @@ namespace OrderManagementAPI.Services.Concrete
 
         public async Task<int> CreateOrderAsync(CreateOrderRequest createOrderRequest)
         {
-            // Order oluşturma
+            
             var order = new Order
             {
                 CustomerName = createOrderRequest.CustomerName,
@@ -38,8 +40,9 @@ namespace OrderManagementAPI.Services.Concrete
             };
 
             await _orderRepository.AddAsync(order);
+            
 
-            // OrderDetail oluşturma
+
             foreach (var detail in createOrderRequest.ProductDetails)
             {
                 var orderDetail = new OrderDetail
@@ -52,8 +55,14 @@ namespace OrderManagementAPI.Services.Concrete
                 await _orderDetailRepository.AddAsync(orderDetail);
             }
 
-            // RabbitMQ kuyruğuna mail gönderme isteği eklenmesi
-            await _rabbitMqService.SendMailAsync(createOrderRequest.CustomerEmail);
+            var mailMessage = new SendMailRequest
+            {
+                To = createOrderRequest.CustomerEmail,
+                Subject = "Order Confirmation",
+                Body = $"Your order with ID {order.Id} has been successfully placed."
+            };
+
+            await _rabbitMqService.SendMailAsync(mailMessage);
 
             return order.Id;
         }

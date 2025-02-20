@@ -1,71 +1,49 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using RabbitMQ.Client;
-using RabbitMQ.Client.Events;
 using System.Text;
-using Microsoft.Extensions.Logging;
-using Microsoft.EntityFrameworkCore.Metadata;
+using System.Threading.Tasks;
 using OrderManagementAPI.Services.Abstract;
+using OrderManagementAPI.Dtos;
 
 namespace OrderManagementAPI.Services.Concrete
 {
     public class RabbitMqService : IRabbitMqService
     {
         private readonly IConnection _connection;
-        private readonly RabbitMQ.Client.IModel _channel;
+        private readonly IModel _channel;
         private readonly ILogger<RabbitMqService> _logger;
 
-        public RabbitMqService(ILogger<RabbitMqService> logger)
+        public RabbitMqService(string rabbitMqUri, ILogger<RabbitMqService> logger)
         {
             var factory = new ConnectionFactory()
             {
-                HostName = "localhost",
-                UserName = "guest",
-                Password = "guest"
+                Uri = new Uri(rabbitMqUri), 
+                DispatchConsumersAsync = true 
             };
-            _connection = factory.CreateConnection(); // Change this line
+
+            _connection = factory.CreateConnection();
             _channel = _connection.CreateModel();
-            _logger = logger;
+
+            _channel.QueueDeclare(queue: "SendMailQueue",
+                                  durable: true,
+                                  exclusive: false,
+                                  autoDelete: false,
+                                  arguments: null);
+
+            _logger = logger; 
         }
 
-        public async Task SendMessageAsync<T>(string queueName, T message)
+        public async Task SendMailAsync(SendMailRequest sendMailRequest)
         {
-            var jsonMessage = JsonConvert.SerializeObject(message);
-            var body = Encoding.UTF8.GetBytes(jsonMessage);
-
-            _channel.QueueDeclare(queue: queueName, durable: true, exclusive: false, autoDelete: false, arguments: null);
+            var body = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(sendMailRequest));
 
             _channel.BasicPublish(exchange: "",
-                                  routingKey: queueName,
+                                  routingKey: "SendMailQueue",
                                   basicProperties: null,
                                   body: body);
 
-            _logger.LogInformation($"Mesaj kuyruğa gönderildi: {queueName}");
-            await Task.CompletedTask;
-        }
-
-        public async Task StartListeningAsync()
-        {
-            _channel.QueueDeclare(queue: "SendMail", durable: true, exclusive: false, autoDelete: false, arguments: null);
-
-            var consumer = new EventingBasicConsumer(_channel);
-            consumer.Received += (model, ea) =>
-            {
-                var message = Encoding.UTF8.GetString(ea.Body.ToArray());
-                _logger.LogInformation($"Mesaj alındı: {message}");
-
-                // Burada mesajı işleyebilirsiniz (örneğin, mail gönderme işlemi)
-            };
-
-            _channel.BasicConsume(queue: "SendMail", autoAck: true, consumer: consumer);
-
-            _logger.LogInformation("RabbitMQ kuyruğu dinlenmeye başlandı.");
-            await Task.CompletedTask;
-        }
-
-        public async Task SendMailAsync(string email)
-        {
-            // Burada RabbitMQ kuyruğuna email gönderme işlemini yapabilirsin.
-            Console.WriteLine($"Email gönderme isteği kuyruğa eklendi: {email}");
+            _logger.LogInformation($"Mail kuyruğa eklendi: {sendMailRequest.To}");
             await Task.CompletedTask;
         }
     }

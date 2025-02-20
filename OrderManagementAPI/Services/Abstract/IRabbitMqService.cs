@@ -1,10 +1,11 @@
-﻿namespace OrderManagementAPI.Services.Abstract
+﻿using OrderManagementAPI.Dtos;
+
+namespace OrderManagementAPI.Services.Abstract
 {
     public interface IRabbitMqService
     {
-        Task SendMessageAsync<T>(string queueName, T message);
-        Task StartListeningAsync();
-        Task SendMailAsync(string email);
+       
+        Task SendMailAsync(SendMailRequest sendMailRequest);
     }
 
 }

@@ -17,11 +17,7 @@ namespace OrderManagementAPI.Controllers
             _productService = productService;
         }
 
-        /// <summary>
-        /// Belirtilen kategoriye göre ürünleri getirir.
-        /// </summary>
-        /// <param name="category">Opsiyonel kategori adı</param>
-        /// <returns>Ürünlerin listesi</returns>
+        
         [HttpGet]
         public async Task<ActionResult<List<ProductDto>>> GetProducts([FromQuery] string? category = null)
         {

@@ -1,18 +1,13 @@
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using OrderManagementAPI.Repository;
+using OrderManagementAPI.Repository.Abstract;
 using OrderManagementAPI.Repository.Concrete;
 using OrderManagementAPI.Services.Abstract;
 using OrderManagementAPI.Services.Concrete;
 
-
 var builder = WebApplication.CreateBuilder(args);
-
-
-builder.Services.AddAutoMapper(typeof(MappingProfile)); 
-builder.Services.AddScoped<IProductService, ProductService>();
-builder.Services.AddScoped<IProductRepository, ProductRepository>();
-
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
@@ -20,15 +15,29 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySQL(connectionString)
 );
 
+var rabbitMqUri = "amqps://yftlcytc:Nu3dls-7titjzOljhYMcukdtDsa6lnuR@moose.rmq.cloudamqp.com/yftlcytc";
+
+builder.Services.AddAutoMapper(typeof(MappingProfile));
+builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
+builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<IOrderDetailRepository, OrderDetailRepository>();
+builder.Services.AddSingleton<IRabbitMqService>(sp =>
+{
+    var logger = sp.GetRequiredService<ILogger<RabbitMqService>>();
+    return new RabbitMqService(rabbitMqUri, logger);
+});
+
+builder.Services.AddHostedService<MailSenderBackgroundService>();
+
 builder.Services.AddMemoryCache();
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -36,9 +45,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
 app.UseAuthorization();
-
 app.MapControllers();
-
 app.Run();
