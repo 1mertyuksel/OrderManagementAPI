@@ -1,6 +1,7 @@
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using OrderManagementAPI.Dtos;
 using OrderManagementAPI.Repository;
 using OrderManagementAPI.Repository.Abstract;
 using OrderManagementAPI.Repository.Concrete;
@@ -29,6 +30,11 @@ builder.Services.AddSingleton<IRabbitMqService>(sp =>
     return new RabbitMqService(rabbitMqUri, logger);
 });
 
+builder.Services.AddHostedService<MailSenderBackgroundService>();
+// SMTP ayarlarýný yapýlandýr
+builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
+
+// Diðer servisler
 builder.Services.AddHostedService<MailSenderBackgroundService>();
 
 builder.Services.AddMemoryCache();
