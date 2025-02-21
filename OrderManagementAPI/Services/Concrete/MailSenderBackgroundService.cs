@@ -13,8 +13,9 @@ public class MailSenderBackgroundService : BackgroundService
     private readonly IModel _channel;
     private readonly IConnection _connection;
     private readonly SmtpSettings _smtpSettings;
+    private readonly ILogger<MailSenderBackgroundService> _logger;
 
-    public MailSenderBackgroundService(IOptions<SmtpSettings> smtpSettings)
+    public MailSenderBackgroundService(IOptions<SmtpSettings> smtpSettings, ILogger<MailSenderBackgroundService> logger)
     {
         var factory = new ConnectionFactory()
         {
@@ -31,7 +32,8 @@ public class MailSenderBackgroundService : BackgroundService
                               autoDelete: false,
                               arguments: null);
 
-        _smtpSettings = smtpSettings.Value; 
+        _smtpSettings = smtpSettings.Value;
+        _logger = logger;
     }
 
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -43,7 +45,8 @@ public class MailSenderBackgroundService : BackgroundService
             var message = Encoding.UTF8.GetString(body);
             var mailMessage = JsonConvert.DeserializeObject<SendMailRequest>(message);
 
-            
+            _logger.LogInformation("Received mail message for: {Recipient}", mailMessage.To);
+
             await SendEmailAsync(mailMessage);
 
             _channel.BasicAck(args.DeliveryTag, multiple: false);
@@ -58,7 +61,6 @@ public class MailSenderBackgroundService : BackgroundService
     private async Task SendEmailAsync(SendMailRequest mailRequest)
     {
         try
-
         {
             using (var smtpClient = new SmtpClient(_smtpSettings.Server))
             {
@@ -77,12 +79,12 @@ public class MailSenderBackgroundService : BackgroundService
                 mailMessage.To.Add(mailRequest.To);
 
                 await smtpClient.SendMailAsync(mailMessage);
-                Console.WriteLine($"Mail Gönderildi: {mailRequest.To}");
+                _logger.LogInformation("Mail sent successfully to: {Recipient}", mailRequest.To);
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Mail gönderilirken hata oluştu: {ex.Message}");
+            _logger.LogError(ex, "Error occurred while sending email to: {Recipient}", mailRequest.To);
         }
     }
 }

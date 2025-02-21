@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using OrderManagementAPI.Services.Abstract;
 using OrderManagementAPI.Dtos;
+using Serilog;
 
 namespace OrderManagementAPI.Services.Concrete
 {
@@ -18,8 +19,8 @@ namespace OrderManagementAPI.Services.Concrete
         {
             var factory = new ConnectionFactory()
             {
-                Uri = new Uri(rabbitMqUri), 
-                DispatchConsumersAsync = true 
+                Uri = new Uri(rabbitMqUri),
+                DispatchConsumersAsync = true
             };
 
             _connection = factory.CreateConnection();
@@ -31,7 +32,8 @@ namespace OrderManagementAPI.Services.Concrete
                                   autoDelete: false,
                                   arguments: null);
 
-            _logger = logger; 
+            _logger = logger;
+            _logger.LogInformation("RabbitMqService initialized with URI: {RabbitMqUri}", rabbitMqUri);
         }
 
         public async Task SendMailAsync(SendMailRequest sendMailRequest)
@@ -43,7 +45,7 @@ namespace OrderManagementAPI.Services.Concrete
                                   basicProperties: null,
                                   body: body);
 
-            _logger.LogInformation($"Mail kuyruğa eklendi: {sendMailRequest.To}");
+            _logger.LogInformation($"Mail kuyruğa eklendi: {sendMailRequest.To}"); 
             await Task.CompletedTask;
         }
     }

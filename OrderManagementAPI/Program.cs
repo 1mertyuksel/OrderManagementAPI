@@ -7,8 +7,15 @@ using OrderManagementAPI.Repository.Abstract;
 using OrderManagementAPI.Repository.Concrete;
 using OrderManagementAPI.Services.Abstract;
 using OrderManagementAPI.Services.Concrete;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console() // Konsola log yazma
+    .CreateLogger();
+
+// Serilog'u kullanarak logging'i yapýlandýrma
+builder.Host.UseSerilog();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 

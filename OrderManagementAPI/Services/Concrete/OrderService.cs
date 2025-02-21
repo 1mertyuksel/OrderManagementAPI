@@ -15,21 +15,19 @@ namespace OrderManagementAPI.Services.Concrete
         private readonly IOrderRepository _orderRepository;
         private readonly IOrderDetailRepository _orderDetailRepository;
         private readonly IRabbitMqService _rabbitMqService;
-       
+        private readonly ILogger<OrderService> _logger;
 
         public OrderService(IOrderRepository orderRepository, IOrderDetailRepository orderDetailRepository,
-                            IRabbitMqService rabbitMqService, IMapper mapper)
+                            IRabbitMqService rabbitMqService, ILogger<OrderService> logger)
         {
-           
             _orderRepository = orderRepository;
             _orderDetailRepository = orderDetailRepository;
             _rabbitMqService = rabbitMqService;
-            
+            _logger = logger;
         }
 
         public async Task<int> CreateOrderAsync(CreateOrderRequest createOrderRequest)
         {
-            
             var order = new Order
             {
                 CustomerName = createOrderRequest.CustomerName,
@@ -40,8 +38,8 @@ namespace OrderManagementAPI.Services.Concrete
             };
 
             await _orderRepository.AddAsync(order);
-            
 
+            _logger.LogInformation("New order created with ID: {OrderId}", order.Id); 
 
             foreach (var detail in createOrderRequest.ProductDetails)
             {
