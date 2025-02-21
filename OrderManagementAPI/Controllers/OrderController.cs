@@ -1,7 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using OrderManagementAPI.Dtos;
 using OrderManagementAPI.Services.Abstract;
+using System.Threading.Tasks;
 
 namespace OrderManagementAPI.Controllers
 {
@@ -17,11 +17,27 @@ namespace OrderManagementAPI.Controllers
         }
 
         [HttpPost("create-order")]
-        public async Task<ActionResult<int>> CreateOrder([FromBody] CreateOrderRequest request)
+        public async Task<ActionResult<ApiResponse<int>>> CreateOrder([FromBody] CreateOrderRequest request)
         {
             var orderId = await _orderService.CreateOrderAsync(request);
-            return Ok(new { OrderId = orderId });
+
+            if (orderId <= 0)
+            {
+                return BadRequest(new ApiResponse<int>
+                {
+                    Status = Status.Failed,
+                    ResultMessage = "Sipariş oluşturulamadı.",
+                    ErrorCode = 400,
+                    Data = 0
+                });
+            }
+
+            return Ok(new ApiResponse<int>
+            {
+                Status = Status.Success,
+                ResultMessage = "Sipariş başarıyla oluşturuldu.",
+                Data = orderId
+            });
         }
     }
-
 }

@@ -11,13 +11,13 @@ public class ProductService : IProductService
 {
     private readonly IProductRepository _productRepository;
     private readonly IMemoryCache _memoryCache;
-    private readonly IMapper _mapper;
+    
 
     public ProductService(IProductRepository productRepository, IMemoryCache memoryCache, IMapper mapper)
     {
         _productRepository = productRepository;
         _memoryCache = memoryCache;
-        _mapper = mapper;
+        
     }
 
     public async Task<List<ProductDto>> GetProductsAsync(string? category)

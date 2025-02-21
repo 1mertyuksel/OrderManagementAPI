@@ -15,7 +15,7 @@ namespace OrderManagementAPI.Services.Concrete
         private readonly IOrderRepository _orderRepository;
         private readonly IOrderDetailRepository _orderDetailRepository;
         private readonly IRabbitMqService _rabbitMqService;
-        private readonly IMapper _mapper;
+       
 
         public OrderService(IOrderRepository orderRepository, IOrderDetailRepository orderDetailRepository,
                             IRabbitMqService rabbitMqService, IMapper mapper)
@@ -24,7 +24,7 @@ namespace OrderManagementAPI.Services.Concrete
             _orderRepository = orderRepository;
             _orderDetailRepository = orderDetailRepository;
             _rabbitMqService = rabbitMqService;
-            _mapper = mapper;
+            
         }
 
         public async Task<int> CreateOrderAsync(CreateOrderRequest createOrderRequest)
@@ -58,8 +58,8 @@ namespace OrderManagementAPI.Services.Concrete
             var mailMessage = new SendMailRequest
             {
                 To = createOrderRequest.CustomerEmail,
-                Subject = "Order Confirmation",
-                Body = $"Your order with ID {order.Id} has been successfully placed."
+                Subject = "Sipariş Bilgisi",
+                Body = $"ID'si {order.Id} olan siparişiniz başarıyla işleme alınmıştır."
             };
 
             await _rabbitMqService.SendMailAsync(mailMessage);

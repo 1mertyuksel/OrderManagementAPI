@@ -17,18 +17,28 @@ namespace OrderManagementAPI.Controllers
             _productService = productService;
         }
 
-        
         [HttpGet]
-        public async Task<ActionResult<List<ProductDto>>> GetProducts([FromQuery] string? category = null)
+        public async Task<ActionResult<ApiResponse<List<ProductDto>>>> GetProducts([FromQuery] string? category = null)
         {
             var products = await _productService.GetProductsAsync(category);
 
             if (products == null || products.Count == 0)
             {
-                return NotFound(new { message = "Ürün bulunamadı." });
+                return NotFound(new ApiResponse<List<ProductDto>>
+                {
+                    Status = Status.Failed,
+                    ResultMessage = "Ürün bulunamadı.",
+                    ErrorCode = 404,
+                    Data = null
+                });
             }
 
-            return Ok(products);
+            return Ok(new ApiResponse<List<ProductDto>>
+            {
+                Status = Status.Success,
+                ResultMessage = "Ürünler başarıyla getirildi.",
+                Data = products
+            });
         }
     }
 }

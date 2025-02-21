@@ -31,7 +31,7 @@ public class MailSenderBackgroundService : BackgroundService
                               autoDelete: false,
                               arguments: null);
 
-        _smtpSettings = smtpSettings.Value; // SMTP ayarlarını al
+        _smtpSettings = smtpSettings.Value; 
     }
 
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -43,7 +43,7 @@ public class MailSenderBackgroundService : BackgroundService
             var message = Encoding.UTF8.GetString(body);
             var mailMessage = JsonConvert.DeserializeObject<SendMailRequest>(message);
 
-            // E-posta gönderme işlemi
+            
             await SendEmailAsync(mailMessage);
 
             _channel.BasicAck(args.DeliveryTag, multiple: false);
@@ -58,6 +58,7 @@ public class MailSenderBackgroundService : BackgroundService
     private async Task SendEmailAsync(SendMailRequest mailRequest)
     {
         try
+
         {
             using (var smtpClient = new SmtpClient(_smtpSettings.Server))
             {
